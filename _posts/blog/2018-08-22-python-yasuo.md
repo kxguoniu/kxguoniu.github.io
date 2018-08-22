@@ -6,13 +6,16 @@ description: python实现压缩文件的体会
 keywords: Python
 ---
 
-#环境
+##环境
+
 1.Linux系统
 
 2.python2.7
 
 3.zipfile模块
-#压缩文件
+
+##压缩文件
+
 ```python
 def zip_dir(dirname=DIRNAME, zipfilename=ZIPFILENAME):
     '''
@@ -44,7 +47,9 @@ def zip_dir(dirname=DIRNAME, zipfilename=ZIPFILENAME):
             filelist.extend(pathlist)
     return True
 ```
+
 #解压文件
+
 ```python
 def unzip_dir(zipfilename=ZIPFILENAME, unziptodir=UNZIPTODIR):
     '''
@@ -66,7 +71,9 @@ def unzip_dir(zipfilename=ZIPFILENAME, unziptodir=UNZIPTODIR):
                     os.mkdir(dirpath)
                 fp.extract(name, unziptodir)
 ```
+
 #筛选文件
+
 ```python
 def searchfile(filepath, s_time):
     '''
@@ -85,7 +92,9 @@ def searchfile(filepath, s_time):
             return True
     return False
 ```
+
 #读取和保存记录
+
 ```python
 def read_time():
     '''
