@@ -495,7 +495,7 @@ LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP�
 &emsp;&emsp;Checkrules指示naxsi采取动作  
 &emsp;&emsp;CheckRule  “$SQL >= 8” BLOCK;
 ## 3.8Matchzones (mz)
-![图片找不到啦！](/images/blog/matchzones.png)  
+![图片找不到啦！](/images/blog/nginx-naxsi/matchzones.png)  
 Mz粗匹配  
 &emsp;&emsp;ARGS：GET args  
 &emsp;&emsp;HEADERS：HTTP Headers  
