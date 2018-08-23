@@ -1,8 +1,8 @@
 ---
 layout: post
-title: Nginx防火墙
+title: Nginx+Naxsi部署web应用防火墙
 categories: Nginx
-description: python实现压缩文件的体会
+description: Nginx
 keywords: Nginx
 ---
 
@@ -458,7 +458,7 @@ LibInjectionXss		一个指令，以使libinjection的XSS检测上所有的HTTP�
 LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP请求的一部分
 ```
 ## 3.5白名单
-![图片找不到啦！](../../images/baimingdan.png)  
+![图片找不到啦！](/images/blog/nginx-naxsi/baimingdan.png)  
 &emsp;&emsp;Wl：0		列出所有规则  
 &emsp;&emsp;Wl：42		白名单规则42  
 &emsp;&emsp;Wl：41 42 43	白名单规则41、42、43  
@@ -470,8 +470,8 @@ LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP�
 &emsp;&emsp;BasicRule wl:1000 "mz:$BODY_VAR:save";  
 &emsp;&emsp;BasicRule wl:1402 "mz:$HEADERS_VAR:content-type";  
 &emsp;&emsp;BasicRule wl:1000 "mz:URL|$URL:/wp-admin/update.php";
-<span id="3.6"><h2>3.6规则</h2></a>
-![图片找不到啦！](../../images/guize.png)  
+## 3.6规则
+![图片找不到啦！](/images/blog/nginx-naxsi/guize.png)  
 &emsp;&emsp;1>内部规则1-999 协议解析中的异常问题  
 &emsp;&emsp;2>SQL注入规则1000-1099  
 &emsp;&emsp;3>OBVIOUS RFI规则1100-1100  
@@ -490,12 +490,12 @@ LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP�
 &emsp;&emsp;MainRule "rx:select|union|update|delete|insert|table|from|ascii|hex|unhex|drop" "msg:sql keywords" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:4" id:1000;  
 &emsp;&emsp;MainRule "str:\"" "msg:double quote" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:8,$XSS:8" id:1001;  
 &emsp;&emsp;MainRule negative "rx:multipart/form-data|application/x-www-form-urlencoded" "msg:Content is neither mulipart/x-www-form.." "mz:$HEADERS_VAR:Content-type" "s:$EVADE:4" id:1402;
-<span id="3.7"><h2>3.7checkrule</h2></a>
-![图片找不到啦！](../../images/checkrule.png)  
+## 3.7checkrule
+![图片找不到啦！](/images/blog/nginx-naxsi/checkrule.png)  
 &emsp;&emsp;Checkrules指示naxsi采取动作  
 &emsp;&emsp;CheckRule  “$SQL >= 8” BLOCK;
-<span id="3.8"><h2>3.8Matchzones (mz)</h2></a>
-![图片找不到啦！](../../images/matchzones.png)  
+## 3.8Matchzones (mz)
+![图片找不到啦！](/images/blog/nginx-naxsi/matchzones.png)  
 Mz粗匹配  
 &emsp;&emsp;ARGS：GET args  
 &emsp;&emsp;HEADERS：HTTP Headers  
