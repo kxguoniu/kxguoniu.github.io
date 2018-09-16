@@ -6,6 +6,7 @@ description: python多叉树
 keywords: Python
 ---
 ## 节点数据结构
+
 ```python
 class Node(object):
     '''
