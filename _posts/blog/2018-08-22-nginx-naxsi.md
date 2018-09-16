@@ -1,38 +1,22 @@
 ---
 layout: post
-title: Nginx防火墙
+title: Nginx+Naxsi部署web应用防火墙
 categories: Nginx
-description: python实现压缩文件的体会
+description: Nginx
 keywords: Nginx
 ---
-<a href="#一"><h1>一、WAF的基本概念和原理</h1></a>
-<a href="#二"><h1>二、Nginx的安装和基本配置</h1></a>
-<a href="#2.1"><h2>&emsp;&emsp;**2.1安装nginx**</h2></a>
-<a href="#2.2"><h2>&emsp;&emsp;**2.2编辑nginx启动脚本**</h2></a>
-<a href="#2.2.1"><h3>&emsp;&emsp;&emsp;&emsp;**Vim支持nginx语法**</h3></a>
-<a href="#2.3"><h2>&emsp;&emsp;**2.3测试**</h2></a>
-<a href="#2.4"><h2>&emsp;&emsp;**2.4基本配置**</h2></a>
-<a href="#三"><h1>三、naxsi与Nginx整合实现WAF</h1></a>
-<a href="#3.1"><h2>&emsp;&emsp;**3.1安装naxsi**</h2></a>
-<a href="#3.2"><h2>&emsp;&emsp;**3.2配置naxsi**</h2></a>
-<a href="#3.3"><h2>&emsp;&emsp;**3.3naxsi动态变量**</h2></a>
-<a href="#3.4"><h2>&emsp;&emsp;**3.4naxsi静态变量|Location 内部的指令**</h2></a>
-<a href="#3.5"><h2>&emsp;&emsp;**3.5白名单**</h2></a>
-<a href="#3.6"><h2>&emsp;&emsp;**3.6规则**</h2></a>
-<a href="#3.7"><h2>&emsp;&emsp;**3.7checkrule**</h2></a>
-<a href="#3.8"><h2>&emsp;&emsp;**3.8Matchzones (mz)**</h2></a>
-<a href="#3.9"><h2>&emsp;&emsp;**3.9Naxsilogs**</h2></a>
-<a href="#四"><h1>四、nxapi白规则生成算法</h1></a>
-<a href="#4.1"><h2>&emsp;&emsp;**4.1安装nxtool.py工具**</h2></a>
-<a href="#4.2"><h2>&emsp;&emsp;**4.2  nxapi生成白名单规则**</h2></a>
------
-<br \\>
-<span id="一"><h1>一、WAF的基本概念和原理</h1></a>
-&emsp;&emsp;网站安全防护(WAF)基于对http请求的分析，如果检测到请求是攻击行为，则会对请求进行阻断，不会让请求到业务的机器上去，提高业务的安全性，为web应用提供实时的防护  
+
+**目录**
+
+* TOC
+{:toc}
+
+# 一、WAF的基本概念和原理
+&emsp;&emsp;网站安全防护(WAF)基于对http请求的分析，如果检测到请求是攻击行为，则会对请求进行阻断，不会让请求到业务的机器上去，提高业务的安全性，为web应用提供实时的防护。
 &emsp;&emsp;Web防火墙，主要是对Web特有入侵方式的加强防护，如DDOS防护、SQL注入、XML注入、XSS等。由于是应用层而非网络层的入侵，从技术角度都应该称为Web IPS，而不是Web防火墙。这里之所以叫做Web防火墙，是因为大家比较好理解，业界流行的称呼而已。由于重点是防SQL注入，也有人称为SQL防火墙。
 
-<span id="二"><h1>二、Nginx的安装和基本配置</h1></a>
-<span id="2.1"><h2>2.1安装nginx</h2></a>
+# 二、Nginx的安装和基本配置
+## 2.1安装nginx
 ```bash
 $ yum install zlib  zlib-devel  gcc  gcc-c++  openssl  openssl-devel
 $ wget http://nginx.org/download/nginx-1.12.0.tar.gz
@@ -70,13 +54,14 @@ $ make
 $ make install
 ```
 
-<span id="2.2"><h2>2.2编辑nginx启动脚本</h2></a>
+## 2.2编辑nginx启动脚本
 ```bash
 $ touch nginx
 $ chmod 755 nginx
 ```
-<br \\>
-编辑文件，使文件内容如下：  
+
+编辑文件，使文件内容如下：
+
 ```bash
 #!/bin/bash
 #
@@ -205,24 +190,27 @@ esac
 
 exit $RETVAL
 ```
-<br \\>
-<span id="2.2.1"><h3>Vim支持nginx语法</h3></span>  
+
+### Vim支持nginx语法
 1.下载 nginx.vim  
-&emsp;&emsp;http://www.vim.org/scripts/download_script.php?src_id=19394  
+&emsp;&emsp;http://www.vim.org/scripts/download_script.php?src_id=19394
+
 2.将 nginx.vim 复制到 vim/syntax 目录  
-&emsp;&emsp;根据自身的需要和 vim 的目录来灵活操作，  
+&emsp;&emsp;根据自身的需要和 vim 的目录来灵活操作  
 &emsp;&emsp;[root@localhost syntax]# pwd  
 &emsp;&emsp;/usr/share/vim/vim70/syntax  
-&emsp;&emsp;也可以复制到 ~/.vim/syntax/ 用户所在的目录  
+&emsp;&emsp;也可以复制到 ~/.vim/syntax/ 用户所在的目录
+
 3.配置 nginx.vim  
 &emsp;&emsp;au BufRead,BufNewFile /etc/nginx/* set ft=nginx  
 &emsp;&emsp;在 filetype.vim 文件中加入上面的代码，可以加 vim/filetype.vim 程序目录中，也可以是 ~/.vim/filetype.vim 用户目录中。以上目录或文件不存在的需要自行添加。其中 “/etc/nginx” 为 nginx 配置文件的目录。  
-&emsp;&emsp;这样就可以把杂乱的 nginx 配置文件格式化为比较规范和漂亮的 nginx 配置文件了  
-<span id="2.3"><h2>2.3测试</h2></a>
+&emsp;&emsp;这样就可以把杂乱的 nginx 配置文件格式化为比较规范和漂亮的 nginx 配置文件了
+
+## 2.3测试
 &emsp;&emsp;$ mv nginx  /etc/init.d/  
 &emsp;&emsp;$ service  nginx  start  
 &emsp;&emsp;通过浏览器访问  http://localhost/
-<span id="2.4"><h2>2.4基本配置</h2></a>
+## 2.4基本配置
 >正常运行配置
 
 &emsp;&emsp;daemon  on|off			是否让nginx运行与后台，默认on，调试时设置为off，所有信息输出在控制台  
@@ -279,7 +267,7 @@ exit $RETVAL
 &emsp;&emsp;&emsp;&emsp;listen  address[:port]  
 &emsp;&emsp;&emsp;&emsp;listen  port  
 &emsp;&emsp;&emsp;&emsp;listen  unix:socket  
-&emsp;&emsp;default_server  定义此server为默认server，如果所有server都没有定义，第一个server即为默认>server
+&emsp;&emsp;default_server  定义此server为默认server，如果所有server都没有定义，第一个server即为默认server  
 
 &emsp;&emsp;rcvbuf=SIZE		接收缓存大小  
 &emsp;&emsp;sndbuf=SIZE		发送缓存大小  
@@ -309,7 +297,7 @@ exit $RETVAL
 
 &emsp;&emsp;Allow  
 &emsp;&emsp;Deny  
-&emsp;&emsp;自上而下一次认证，默认通过  
+&emsp;&emsp;自上而下依次认证，默认通过  
 >URL rewrite
 
 &emsp;&emsp;rewrite regex replacement [flag];  
@@ -335,8 +323,8 @@ exit $RETVAL
 &emsp;&emsp;$http_HEADER:匹配请求报文中指定的HEADER，$http_host匹配请求报文中的host首部  
 &emsp;&emsp;$sent_http_HEADER:匹配响应报文中指定的HERDER，例如$http_content_type匹配相应报文中的content-type首部  
 &emsp;&emsp;$document_root：当前请求映射到的root配置
-<span id="三"><h1>三、naxsi与Nginx整合实现WAF</h1></a>
-<span id="3.1"><h2>3.1安装naxsi</h2></a>
+# 三、naxsi与Nginx整合实现WAF
+## 3.1安装naxsi
 ```bash
 $  wget  https://github.com/nbs-system/naxsi/archive/master.zip
 $  unzip master.zip
@@ -371,7 +359,7 @@ $  ./configure \
 $  make
 $  make install
 ```
-<span id="3.2"><h2>3.2配置naxsi</h2></a>
+## 3.2配置naxsi
 ```bash
 $  cp  /usr/local/naxsi/naxsi_config/naxsi_core.rules  /etc/nginx/			#核心规则
 $  vim  /etc/nginx/my_naxsi.rules
@@ -437,7 +425,7 @@ $  vim  /etc/nginx/nginx.conf
 &emsp;&emsp;$  service  nginx  start  
 &emsp;&emsp;$  curl  ‘http://localhost:80/?a=<>’      #访问测试    结果为不通过，查看错误日志为  
 &emsp;&emsp;2017/05/15 15:35:29 [error] 112874#0: *17 NAXSI_FMT:   ip=192.168.56.1&server=192.168.56.153&uri=/   &learning=0&vers=0.55.3&total_processed=4&total_blocked=4&block=1&cscore0=$XSS&score0=8&zone0=ARGS&id0=1302&var_name0=a, client: 192.168.56.1, server: directory1, request: "GET /?a=%3C%3E HTTP/1.1", host: "192.168.56.153"
-<span id="3.3"><h2>3.3naxsi动态变量</h2></a>
+## 3.3naxsi动态变量
 ```bash
 Set  $naxsi_flag_learning  0|1  		如果存在，该变量将覆盖naxsi学习标志（“0”禁用学习，“1”启用它）。
 Set  $naxsi_flag_post_action  0|1  		如果存在并设置为“0”，则该变量可用于在学习模式下禁用post_action。
@@ -457,7 +445,7 @@ Set  $naxsi_flag_libinjection_xss	0|1	可以在运行时设置的标志来启用
 &emsp;&emsp;&emsp;&emsp;set $naxsi_flag_enable 0;  
 &emsp;&emsp;}
 
-<span id="3.4"><h2>3.4naxsi静态变量|Location 内部的指令</h2></a>
+## 3.4naxsi静态变量|Location 内部的指令
 ```bash
 DeniedUrl “/directory”;	naxsi内部重定向  阻止请求
 LearningMode；		在该位置开启学习模式
@@ -469,21 +457,21 @@ MainRule			用于声明规则或白名单指令  http内部指令
 LibInjectionXss		一个指令，以使libinjection的XSS检测上所有的HTTP请求的一部分
 LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP请求的一部分
 ```
-<span id="3.5"><h2>3.5白名单</h2></a>
-![图片找不到啦！](../../images/baimingdan.png)  
+## 3.5白名单
+![图片找不到啦！](/images/blog/nginx-naxsi/baimingdan.png)  
 &emsp;&emsp;Wl：0		列出所有规则  
 &emsp;&emsp;Wl：42		白名单规则42  
 &emsp;&emsp;Wl：41 42 43	白名单规则41、42、43  
 &emsp;&emsp;Wl：-42		除了规则42外，列出所有规则(>=1000)  
 &emsp;&emsp;Mz：		mz是匹配区  
-<br \\>
+
 白名单示例  
 &emsp;&emsp;BasicRule wl:1100 "mz:$ARGS_VAR:redirect_to";  
 &emsp;&emsp;BasicRule wl:1000 "mz:$BODY_VAR:save";  
 &emsp;&emsp;BasicRule wl:1402 "mz:$HEADERS_VAR:content-type";  
 &emsp;&emsp;BasicRule wl:1000 "mz:URL|$URL:/wp-admin/update.php";
-<span id="3.6"><h2>3.6规则</h2></a>
-![图片找不到啦！](../../images/guize.png)  
+## 3.6规则
+![图片找不到啦！](/images/blog/nginx-naxsi/guize.png)  
 &emsp;&emsp;1>内部规则1-999 协议解析中的异常问题  
 &emsp;&emsp;2>SQL注入规则1000-1099  
 &emsp;&emsp;3>OBVIOUS RFI规则1100-1100  
@@ -491,23 +479,23 @@ LibInjectionSql		一个指令，以使libinjection的SQL检测上所有的HTTP�
 &emsp;&emsp;5>XSS规则1300-1399  
 &emsp;&emsp;6>绕过规则1400-1500  
 &emsp;&emsp;7>文件上传1500-1600  
-<br \\>
+
 &emsp;&emsp;Id：num			规则唯一的数字ID，将在NAXSI_FMT白名单中使用  
 &emsp;&emsp;匹配模式  
 &emsp;&emsp;s：$LABEL:SCORE	得分  
 &emsp;&emsp;Mz：				mz是匹配区域  
 &emsp;&emsp;Msg：			人类可读的信息  
-<br \\>
+
 规则示例  
 &emsp;&emsp;MainRule "rx:select|union|update|delete|insert|table|from|ascii|hex|unhex|drop" "msg:sql keywords" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:4" id:1000;  
 &emsp;&emsp;MainRule "str:\"" "msg:double quote" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:8,$XSS:8" id:1001;  
 &emsp;&emsp;MainRule negative "rx:multipart/form-data|application/x-www-form-urlencoded" "msg:Content is neither mulipart/x-www-form.." "mz:$HEADERS_VAR:Content-type" "s:$EVADE:4" id:1402;
-<span id="3.7"><h2>3.7checkrule</h2></a>
-![图片找不到啦！](../../images/checkrule.png)  
+## 3.7checkrule
+![图片找不到啦！](/images/blog/nginx-naxsi/checkrule.png)  
 &emsp;&emsp;Checkrules指示naxsi采取动作  
 &emsp;&emsp;CheckRule  “$SQL >= 8” BLOCK;
-<span id="3.8"><h2>3.8Matchzones (mz)</h2></a>
-![图片找不到啦！](../../images/matchzones.png)  
+## 3.8Matchzones (mz)
+![图片找不到啦！](/images/blog/nginx-naxsi/matchzones.png)  
 Mz粗匹配  
 &emsp;&emsp;ARGS：GET args  
 &emsp;&emsp;HEADERS：HTTP Headers  
@@ -527,7 +515,7 @@ Mz正则表达式
 &emsp;&emsp;$URL：string		：限定此网址  
 &emsp;&emsp;$URL_X：regex	：限定匹配的网址  
 正则表达式和静态不能混用
-<span id="3.9"><h2>3.9Naxsilogs</h2></a>
+## 3.9Naxsilogs
 NAXSI_FMT  
 &emsp;&emsp;ip ：客户端的ip  
 &emsp;&emsp;server：请求的主机名（如http头文件Host所示）  
@@ -542,7 +530,7 @@ NAXSI_FMT
 &emsp;&emsp;cscoreN：第N+1个命名得分标签  
 &emsp;&emsp;scoreN：相关联的第N+1个命名得分值  
 &emsp;&emsp;2017/05/15 15:35:29 [error] 112874#0: *17 NAXSI_FMT: ip=192.168.56.1&server=192.168.56.153&uri=/&learning=0&vers=0.55.3&total_processed=4&total_blocked=4&block=1&cscore0=$XSS&score0=8&zone0=ARGS&id0=1302&var_name0=a, client: 192.168.56.1, server: directory1, request: "GET /?a=%3C%3E HTTP/1.1", host: "192.168.56.153"
-<span id="四"><h1>四、nxapi白规则生成算法</h1></a>
+# 四、nxapi白规则生成算法
 白名单生成方法（基于分析nginx日志，工具分析的是记录naxsi waf拦截事件的error日志）如下  
 &emsp;&emsp;(1)  手动添加  
 &emsp;&emsp;(2)  自动生成  
@@ -559,7 +547,7 @@ NAXSI_FMT
 &emsp;&emsp;uri_ratio_template : &emsp;ratio of uri hitting the template vs uri hitting the rule  
 &emsp;&emsp;ip_ratio_global : &emsp;ratio of peers hitting the rule vs all peers  
 &emsp;&emsp;uri_ratio_global : &emsp;ratio of uri hitting the rule vs all uri
-<span id="4.1"><h2>4.1安装nxtool.py工具</h2></a>
+## 4.1安装nxtool.py工具
 ```bash
 $  cd  /usr/local/naxsi/nxapi/
 $  python  setup.py  build
@@ -611,7 +599,7 @@ $  nxtool.py  -c  /usr/local/etc/nxapi.json  -x			查看
 	# 192.168.56.1 60.36% (total:664/1100)
 	# 192.168.56.158 39.64% (total:436/1100)
 ```
-<span id="4.2"><h2>4.2  nxapi生成白名单规则</h2></a>
+## 4.2  nxapi生成白名单规则
 ```bash
 $  nxtool.py -c nxapi.json -s www.x1.fr -f --filter 'uri /foo/bar/test' --slack
 ...
