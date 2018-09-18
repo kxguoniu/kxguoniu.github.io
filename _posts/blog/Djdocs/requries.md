@@ -1,0 +1,188 @@
+```python
+from django.db import models
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.name
+
+class Entry(models.Model):
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
+    headline = models.CharField(max_length=255)
+    body_text = models.TextField()
+    pub_date = models.DateField()
+    mod_date = models.DateField()
+    authors = models.ManyToManyField(Author)
+    n_comments = models.IntegerField()
+    n_pingbacks = models.IntegerField()
+    rating = models.IntegerField()
+
+    def __str__(self):
+        return self.headline
+```
+
+## 创建对象
+```python
+>>> from blog.models import Blog
+>>> b = Blog(name='Beates Blog', tarline='All the latest Beatesles news')
+>>> b.save()
+```
+
+## 保存
+### ForeignKey
+更新ForeignKey字段的工作方式与保存普通字段的方式完全相同,只需将正确类型的对象分配给相关字段即可.
+```python
+>>> from blog.models import Blog, Entry
+>>> entry = Entry.objects.get(pk=1)
+>>> cheese_blog = Blog.objects.get(name="Cheddar Talk")
+>>> entry.blog = cheese_blog
+>>> entry.save()
+```
+### ManyToManyField
+更新ManyToManyField工作的方式略有不同,使用字段上的add()方法添加
+```python
+>>> from blog.models import Author
+>>> joe = Author.objects.create(name="Joe")
+>>> john = Author.objects.create(name="John")
+>>> entry.authors.add(joe, john [,...])
+```
+
+## 检索对象
+### 检索所有对象
+```python
+>>> all_entries = Entry.objects.all()
+```
+
+### 使用过滤器检索特定对象
+
+**filter(\*\*kwargs)**  
+查找参数匹配的对象
+
+**exclude(\*\*kwargs)**  
+查找给定参数不匹配的对象
+```python
+>>> Entry.objects.all().filter(**kwargs).exclude(**kwargs)
+```
+
+**get()**  
+检索单个对象  
+如果只有一个对象与查询匹配,则可以使用 get() 查询  
+get() 和 filter()[0]之间存在差异,如果没有与查询匹配的结果
+get()会引发 DoesNotExist 异常,如果有多个结果与 get()匹配则会引发
+MultipleObjectsReturned 异常.
+
+**查询很懒**  
+```python
+>>> q = Entry.objects.filter(headline__startswith="What")
+>>> q = q.filter(pub_date__lte=datetime.date.today())
+>>> q = q.exclude(body_text__icontains="food")
+>>> print(q)
+```
+虽然这看起来像三个数据库查询,但实际上它只在数据库中命中一次,在最后一次 print(q)
+在询问查询集之前,不会从数据库获得结果
+
+
+
+
+
+**限制查询数量**  
+前五
+>>> Entry.objects.all()[:5]
+六到十
+>>> Entry.objects.all()[5:10]
+这个查询会立即执行
+>>> Entry.objects.all()[:10:2]
+索引
+>>> Entry.objects.all()[0]
+IndexError
+
+
+字段查找
+exact
+精准匹配(默认查找方式)
+>>> Entry.objects.get(headline__exact="Cat bites dog")
+
+iexact
+不区分大小写匹配
+>>> Blog.objects.get(name__iexact="beatles blog")
+
+contains
+区分大小写的包含查询
+>>> Entry.objects.get(headline__contains='Lennon')
+
+icontains
+不区分大小写包含查询
+
+startswith, endswith
+分别匹配开始和结尾,区分大小写
+
+istartswith, iendswith
+不区分大小写的匹配开始或结尾
+
+
+跨越关系查找
+>>> Entry.objects.filter(blog__name='Beatles Blog')
+
+跨越多值关系查询
+
+
+过滤器引用模板字段
+>>> from django.db.models import F
+>>> Entry.objects.filter(n_comments__gt=F('n_pingbacks'))
+>>> Entry.objects.filter(n_comments__gt=F('n_pingbacks') * 2)
+>>> Entry.objects.filter(authors__name=F('blog__name'))
+
+pk查找快捷方式 //主键查找
+
+
+使用Q对象进行复杂查询
+>>> Q(question__startswith='Who')
+>>> Q() | Q()   //或
+>>> ~Q()        //非
+>>> Q(),Q() | Q()   //1 and (2 or 3)
+Q对象和关键字查询一起的话,Q() 必须在前面
+
+
+比较对象
+>>> some_enry == other_entry
+>>> some_enry.id == other_entry.id
+
+删除对象
+>>> obj.delete()
+>>> Entry.objects.filter(pub_date__year=2005).delete()
+
+更新对象
+>>> Entry.objects.all().update(blog=b)
+>>> Entry.objects.all().update(n_pingbacks=F('n_pingbacks') + 1)
+
+
+一对多关系
+转发
+如果模型具有 ForeignKey, 则该模型的实例通过属性访问相关对象
+
+向后
+如果模型具有 ForeignKey, FOO_set
+
+处理对象的其他方法
+add(obj1, obj2, ...)
+create(**kwargs)
+remove(obj1, obj2, ...)
+clear()
+set(objs)
+
+
+多对多关系
+和一堆多关系差不多
+
+
+一对一关系
+和多对一关系相似,不过返回的是对象而不是对象集合
