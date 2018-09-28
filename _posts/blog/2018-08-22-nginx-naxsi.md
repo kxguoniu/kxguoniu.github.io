@@ -6,10 +6,6 @@ description: Nginx
 keywords: Nginx
 ---
 
-**目录**
-
-* TOC
-{:toc}
 
 # 一、WAF的基本概念和原理
 &emsp;&emsp;网站安全防护(WAF)基于对http请求的分析，如果检测到请求是攻击行为，则会对请求进行阻断，不会让请求到业务的机器上去，提高业务的安全性，为web应用提供实时的防护。
