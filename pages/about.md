@@ -1,14 +1,14 @@
 ---
 layout: page
 title: About
-description: 牛开心的个人博客
-keywords: KaiXin Niu, 牛开心
+description: 打码改变世界
+keywords: Zhuang Ma, 马壮
 comments: true
 menu: 关于
 permalink: /about/
 ---
 
-我是牛开心，码而生，码而立。
+我是马壮，码而生，码而立。
 
 仰慕「优雅编码的艺术」。
 
